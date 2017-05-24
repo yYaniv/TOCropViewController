@@ -77,7 +77,7 @@
 - (instancetype)initWithCroppingStyle:(TOCropViewCroppingStyle)style image:(UIImage *)image
 {
     NSParameterAssert(image);
-
+    
     self = [super init];
     if (self) {
         self.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
@@ -106,11 +106,9 @@
     [super viewDidLoad];
     
     BOOL circularMode = (self.croppingStyle == TOCropViewCroppingStyleCircular);
-
+    
     self.view.frame = *([self frame]);//[self frameForCropViewWithVerticalLayout:CGRectGetWidth(self.view.bounds) < CGRectGetHeight(self.view.bounds)];
     [self.view addSubview:self.cropView];
-    
-    self.toolbar.frame = [self frameForToolBarWithVerticalLayout:CGRectGetWidth(self.view.bounds) < CGRectGetHeight(self.view.bounds)];
     [self.view addSubview:self.toolbar];
     
     __weak typeof(self) weakSelf = self;
@@ -125,6 +123,8 @@
     
     self.toolbar.clampButtonHidden = self.aspectRatioPickerButtonHidden || circularMode;
     self.toolbar.rotateClockwiseButtonHidden = self.rotateClockwiseButtonHidden && !circularMode;
+#pragma mark -- frameForToolBar
+    //    self.toolbar.frame = [self frameForToolBarWithVerticalLayout:CGRectGetWidth(self.view.bounds) < CGRectGetHeight(self.view.bounds)];
     
     self.transitioningDelegate = self;
     self.view.backgroundColor = self.cropView.backgroundColor;
@@ -151,10 +151,12 @@
     else {
         [self.cropView setBackgroundImageViewHidden:YES animated:NO];
     }
-
+    
     if (self.aspectRatioPreset != TOCropViewControllerAspectRatioPresetOriginal) {
         [self setAspectRatioPreset:self.aspectRatioPreset animated:NO];
     }
+    self.toolbar.frame = [self frameForToolBarWithVerticalLayout:CGRectGetWidth(self.view.bounds) < CGRectGetHeight(self.view.bounds)];
+    self.toolbar.frame = [self frameForToolBarWithVerticalLayout:CGRectGetWidth(self.view.bounds) < CGRectGetHeight(self.view.bounds)];
 }
 
 - (void)viewDidAppear:(BOOL)animated
@@ -164,7 +166,7 @@
     self.cropView.simpleRenderMode = NO;
     //let application = UIApplication.value(forKey: "sharedApplication") as! UIApplication
     UIApplication *app = (UIApplication*)[UIApplication valueForKey:@"sharedApplication"];
-//    if (animated && [UIApplication sharedApplication].statusBarHidden == NO) {
+    //    if (animated && [UIApplication sharedApplication].statusBarHidden == NO) {
     if (animated && app.statusBarHidden == NO) {
         [UIView animateWithDuration:0.3f animations:^{ [self setNeedsStatusBarAppearanceUpdate]; }];
         
@@ -176,6 +178,9 @@
             [self.cropView setBackgroundImageViewHidden:NO animated:YES];
         }
     }
+    /*BOOL verticalLayout = CGRectGetWidth(self.view.bounds) < CGRectGetHeight(self.view.bounds);
+     self.toolbar.frame = [self frameForToolBarWithVerticalLayout:verticalLayout];
+     self.toolbar.frame = [self frameForToolBarWithVerticalLayout:verticalLayout];*/
 }
 
 - (void)viewWillDisappear:(BOOL)animated
@@ -196,18 +201,18 @@
     self.inTransition = NO;
     [self setNeedsStatusBarAppearanceUpdate];
 }
-    
+
 #pragma mark - frame fix
-    - (void) memeCollageExtensionWithWidht:(CGFloat)width height:(CGFloat)height yPosition:(CGFloat)yPosition {
-        self.viewWidth = width;
-        self.viewHeight = height;
-        self.yPosition = yPosition;
-    }
-    
-    - (CGRect *)frame {
-        CGRect viewFrame = CGRectMake(0,self.yPosition,self.viewWidth, self.viewHeight);
-        return &viewFrame;
-    }
+- (void) memeCollageExtensionWithWidht:(CGFloat)width height:(CGFloat)height yPosition:(CGFloat)yPosition {
+    self.viewWidth = width;
+    self.viewHeight = height;
+    self.yPosition = yPosition;
+}
+
+- (CGRect *)frame {
+    CGRect viewFrame = CGRectMake(0,self.yPosition,self.viewWidth, self.viewHeight);
+    return &viewFrame;
+}
 
 #pragma mark - Status Bar -
 - (UIStatusBarStyle)preferredStatusBarStyle
@@ -252,7 +257,7 @@
         frame.origin.x = 0.0f;
         
         if (self.toolbarPosition == TOCropViewControllerToolbarPositionBottom) {
-            frame.origin.y = CGRectGetHeight(self.view.bounds) - 44.0f;
+            frame.origin.y = CGRectGetHeight(self.view.bounds); //- 44.0f;
         } else {
             frame.origin.y = 0;
         }
@@ -298,7 +303,7 @@
         } else {
             frame.origin.y = 44.0f;
         }
-
+        
         frame.size.width = CGRectGetWidth(bounds);
         frame.size.height = CGRectGetHeight(bounds) - 44.0f;
     }
@@ -311,12 +316,12 @@
     [super viewDidLayoutSubviews];
     
     BOOL verticalLayout = CGRectGetWidth(self.view.bounds) < CGRectGetHeight(self.view.bounds);
-    self.cropView.frame = [self frameForCropViewWithVerticalLayout:verticalLayout];
+    //    self.cropView.frame = [self frameForCropViewWithVerticalLayout:verticalLayout];
     [self.cropView moveCroppedContentToCenterAnimated:NO];
     
     [UIView performWithoutAnimation:^{
         self.toolbar.statusBarVisible = (self.toolbarPosition == TOCropViewControllerToolbarPositionTop && !self.prefersStatusBarHidden);
-        self.toolbar.frame = [self frameForToolBarWithVerticalLayout:verticalLayout];
+        //        self.toolbar.frame = [self frameForToolBarWithVerticalLayout:verticalLayout];
         [self.toolbar setNeedsLayout];
     }];
 }
@@ -339,7 +344,8 @@
     [self.view addSubview:self.toolbarSnapshotView];
     
     [UIView performWithoutAnimation:^{
-        self.toolbar.frame = [self frameForToolBarWithVerticalLayout:UIInterfaceOrientationIsPortrait(toInterfaceOrientation)];
+#pragma mark - commented toolbar
+        //        self.toolbar.frame = [self frameForToolBarWithVerticalLayout:UIInterfaceOrientationIsPortrait(toInterfaceOrientation)];
         [self.toolbar layoutIfNeeded];
         self.toolbar.alpha = 0.0f;
     }];
@@ -470,29 +476,29 @@
         [self presentViewController:alertController animated:YES completion:nil];
     }
     else {
-    //TODO: Completely overhaul this once iOS 7 support is dropped
+        //TODO: Completely overhaul this once iOS 7 support is dropped
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
         
         /*UIAlertController *actionSheet = [[UIAlertController alloc] initWithTitle:nil
-                                                                 delegate:self
-                                                        cancelButtonTitle:cancelButtonTitle
-                                                   destructiveButtonTitle:nil
-                                                        otherButtonTitles:nil];
-        UIAlertController *alert = [UIAlertController
-                                    alertControllerWithTitle:nil
-                                    delegate: self
-                                    message:@"Are You Sure Want to Logout!"
-                                    preferredStyle:UIAlertControllerStyleAlert];
-        
-        for (NSString *item in items) {
-            [actionSheet addButtonWithTitle:item];
-        }
-        
-        if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
-            [actionSheet showFromRect:self.toolbar.clampButtonFrame inView:self.toolbar animated:YES];
-        else
-            [actionSheet showInView:self.view];*/
+         delegate:self
+         cancelButtonTitle:cancelButtonTitle
+         destructiveButtonTitle:nil
+         otherButtonTitles:nil];
+         UIAlertController *alert = [UIAlertController
+         alertControllerWithTitle:nil
+         delegate: self
+         message:@"Are You Sure Want to Logout!"
+         preferredStyle:UIAlertControllerStyleAlert];
+         
+         for (NSString *item in items) {
+         [actionSheet addButtonWithTitle:item];
+         }
+         
+         if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
+         [actionSheet showFromRect:self.toolbar.clampButtonFrame inView:self.toolbar animated:YES];
+         else
+         [actionSheet showInView:self.view];*/
 #pragma clang diagnostic pop
     }
 }
@@ -649,7 +655,7 @@
     self.transitionController.toView    = toView;
     self.transitionController.toFrame   = frame;
     self.prepareForTransitionHandler    = setup;
-
+    
     [viewController dismissViewControllerAnimated:YES completion:^ {
         if (completion) {
             completion();
@@ -674,7 +680,7 @@
         if (!CGRectIsEmpty(transitioning.fromFrame) || transitioning.fromView) {
             strongSelf.cropView.croppingViewsHidden = YES;
         }
-
+        
         if (strongSelf.prepareForTransitionHandler)
             strongSelf.prepareForTransitionHandler();
         
@@ -745,7 +751,7 @@
 {
     CGRect cropFrame = self.cropView.imageCropFrame;
     NSInteger angle = self.cropView.angle;
-
+    
     //If desired, when the user taps done, show an activity sheet
     if (self.showActivitySheetOnDone) {
         TOActivityCroppedImageProvider *imageItem = [[TOActivityCroppedImageProvider alloc] initWithImage:self.image cropFrame:cropFrame angle:angle circular:(self.croppingStyle == TOCropViewCroppingStyleCircular)];
